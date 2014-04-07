@@ -1,9 +1,6 @@
 
 sql <- function(con, statement) {
 
-  if (!isIdCurrent(con)) 
-    stop(paste("expired", class(con)))
-  
   rs <- dbSendQuery(con, statement)
   if (dbHasCompleted(rs)) {
     dbClearResult(rs)
