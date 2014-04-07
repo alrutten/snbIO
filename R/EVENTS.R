@@ -84,7 +84,7 @@ birdIDs = function() {
   con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
   on.exit(closeCon(con))
   
-  d = sql(con,"SELECT x.*, s.sex from 
+  d = sqlQuery(con,"SELECT x.*, s.sex from 
           (SELECT distinct ID birdID, transponder, FUNCTIONS.combo(UL,LL,UR,LR) cb from BTatWESTERHOLZ.ADULTS where transponder IS NOT NULL
           UNION SELECT distinct c.ID birdID, c.transponder, FUNCTIONS.combo(a.UL,a.LL,a.UR,a.LR) cb from BTatWESTERHOLZ.CHICKS c 
           LEFT JOIN BTatWESTERHOLZ.ADULTS a on c.ID = a.ID where c.transponder IS NOT NULL
@@ -106,14 +106,14 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
   IDs = birdIDs()
   load("/home/snb/snb_io/data/ct.Rdata")
   vars = paste0("c('",paste(strsplit(gsub(' ','',paste(ct@data@formula$input)),'\\+')[[2]],collapse='\',\''),"')")
-  keepvars = names(sql(con,'select * from BETA_Events2014 limit 1'))
-  #fids = sql(con,'select id from file_status where year_ = 2013 and box between 100 and 201 order by id desc')$id
-  foo = try({fids = sql(con, paste0("select f.id from file_status f 
+  keepvars = names(sqlQuery(con,'select * from BETA_Events2014 limit 1'))
+  #fids = sqlQuery(con,'select id from file_status where year_ = 2013 and box between 100 and 201 order by id desc')$id
+  foo = try({fids = sqlQuery(con, paste0("select f.id from file_status f 
                                     LEFT JOIN (select distinct id from BETA_Events",year_,") b on f.id = b.id 
                                     where b.id IS NULL and year_ = ",year_," order by id desc"))$id},silent=TRUE)
   if ((!class(foo)=='try-error')&length(fids)>0) {
     for (i in 1:length(fids)) {
-      d = sql(con, paste0("select * from RAW_",year_," where id = ",fids[i]))
+      d = sqlQuery(con, paste0("select * from RAW_",year_," where id = ",fids[i]))
       if (nrow(d)>0) {
         nulls = d[is.na(d$datetime_),]
         if (nrow(nulls) > 0) {

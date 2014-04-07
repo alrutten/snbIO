@@ -1,23 +1,8 @@
 
-sql <- function(con, statement) {
-
-  rs <- dbSendQuery(con, statement)
-  if (dbHasCompleted(rs)) {
-    dbClearResult(rs)
-    invisible()
-    return(NULL)
-  }
-  res <- fetch(rs, n = -1)
-  if (dbHasCompleted(rs)) 
-    dbClearResult(rs)
-  else warning("pending rows")
-  res
-}
- 
 
 writeload = function(d, fname = tempfile(), con, db, tb) {
   write.table(d,fname,sep=',', na='\\N',quote=FALSE,row.names=FALSE, col.names=FALSE)
-  foo = sql(con,paste0("LOAD DATA LOCAL INFILE ", shQuote(fname), " INTO TABLE ",paste(db,tb,sep='.'), 
+  foo = sqlQuery(con,paste0("LOAD DATA LOCAL INFILE ", shQuote(fname), " INTO TABLE ",paste(db,tb,sep='.'), 
                        " CHARACTER SET latin1 FIELDS TERMINATED BY ',';"))
   file.remove(fname)
   return(foo)

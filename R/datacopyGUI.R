@@ -6,7 +6,7 @@
       con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
       on.exit(closeCon(con))
     }
-    check=sql(con,paste("SELECT sum(SD_K_status > 0) n_bad, 
+    check=sqlQuery(con,paste("SELECT sum(SD_K_status > 0) n_bad, 
                         sum(SD_K_status>0)/count(SD_K_status) ratio, count(SD_K_Status) total 
                         from TECHatWESTERHOLZ.technical_details
                         where SD_K_Status IS NOT NULL
@@ -25,7 +25,7 @@
     outfile = paste(snbDir,outname,sep='/')
     dtime=gsub("\\.","-",dtime)
     drv=findRemovable()
-    prev = sql(con,paste("SELECT max(date_time_field) md from TECHatWESTERHOLZ.technical_details where box = ",bx," and SD_K_Status IS NOT NULL and date_time_field<",shQuote(dtime)))$md
+    prev = sqlQuery(con,paste("SELECT max(date_time_field) md from TECHatWESTERHOLZ.technical_details where box = ",bx," and SD_K_Status IS NOT NULL and date_time_field<",shQuote(dtime)))$md
     
     
     if (!(file.exists(outfile))) { 
@@ -41,19 +41,19 @@
           insize=file.info(filename)$size   # this information is no longer accessible after trying file.copy because of i/o errors    
           file.copy(filename,outfile,overwrite=FALSE) #sadly, file.copy() returns TRUE for partial copies
           
-          sql(con,paste("INSERT INTO SNBatWESTERHOLZ2.file_status (path,year_,date_,date_prev,filesize,box,upload_status,boxversion) VALUES('",outname,"',",substr(dtime,1,4),
+          sqlQuery(con,paste("INSERT INTO SNBatWESTERHOLZ2.file_status (path,year_,date_,date_prev,filesize,box,upload_status,boxversion) VALUES('",outname,"',",substr(dtime,1,4),
                         ",'",dtime,"',",shQuote(prev),",",file.info(outfile)$size/1000,",",bx,",0,0)",sep=""))
           
           if (insize == file.info(outfile)$size) {
-            sql(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_K_Aktion,SD_ID) VALUES('",dtime,"','",bx,"','0','0','",Sdsn,"')",sep=""))
+            sqlQuery(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_K_Aktion,SD_ID) VALUES('",dtime,"','",bx,"','0','0','",Sdsn,"')",sep=""))
             out=paste("file copied without problems\n",out,'\n')
           } else{	
-            sql(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_K_Aktion,SD_ID) VALUES('",dtime,"','",bx,"','5','3','",Sdsn,"')",sep=""))
+            sqlQuery(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_K_Aktion,SD_ID) VALUES('",dtime,"','",bx,"','5','3','",Sdsn,"')",sep=""))
             out=paste("card damaged, file partly recovered\n",out,"\n")
           } } else{
-            sql(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_ID) VALUES('",dtime,"','",bx,"','3','",Sdsn,"')",sep=""))
+            sqlQuery(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_ID) VALUES('",dtime,"','",bx,"','3','",Sdsn,"')",sep=""))
             out=paste("No file on card\n",out,"\n")
-          } } else {	sql(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_ID) VALUES('",dtime,"','",bx,"','1','NULL')",sep=""))
+          } } else {	sqlQuery(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_ID) VALUES('",dtime,"','",bx,"','1','NULL')",sep=""))
                      out=paste("CAUTION: card not detected")
           }	
     } else out=paste('ERROR: destination file ',outfile,' already exists. File not copied!',sep="")
@@ -79,12 +79,12 @@
       for (i in (1:length(flist))) {
         outdir=paste(snbDir,substr(dtime,1,4),paste(substr(dtime,1,10),"CF",sep=""),tolower(boxlist[i]),sep="/")
         mtime=file.info(flist[i])$mtime
-        prev = sql(con,paste("SELECT max(date_time_field) md from TECHatWESTERHOLZ.technical_details where box = ",tolower(boxlist[i])," and SD_K_Status IS NOT NULL and date_time_field<",shQuote(mtime)))$md
+        prev = sqlQuery(con,paste("SELECT max(date_time_field) md from TECHatWESTERHOLZ.technical_details where box = ",tolower(boxlist[i])," and SD_K_Status IS NOT NULL and date_time_field<",shQuote(mtime)))$md
         dir.create(outdir,recursive=TRUE)
         if (!file.exists(paste(outdir,filename,sep="/"))) {
           file.copy(flist[i],outdir,overwrite=FALSE)
-          sql(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status, SD_K_Aktion) VALUES('",mtime,"','",boxlist[i],"','0','0')",sep=""))
-          sql(con,paste0("INSERT INTO SNBatWESTERHOLZ2.file_status (path,year_,date_,date_prev,filesize,box,upload_status,boxversion) VALUES('",paste(gsub(snbDir,'',outdir),filename,sep='/'),"',",substr(dtime,1,4),
+          sqlQuery(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status, SD_K_Aktion) VALUES('",mtime,"','",boxlist[i],"','0','0')",sep=""))
+          sqlQuery(con,paste0("INSERT INTO SNBatWESTERHOLZ2.file_status (path,year_,date_,date_prev,filesize,box,upload_status,boxversion) VALUES('",paste(gsub(snbDir,'',outdir),filename,sep='/'),"',",substr(dtime,1,4),
                          ",'",mtime,"',",shQuote(prev),",",round(file.info(flist[i])$size/1000),",",boxlist[i],",0,0)"))
           
         } else errlist=paste(errlist,boxlist[i],sep=',')
