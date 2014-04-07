@@ -3,7 +3,7 @@
   checkSD = function(con, SDsn) {
     dc = FALSE
     if (missing(con)) {
-      con = dbcon(database = 'SNBatWESTERHOLZ2',username='snb',password = 'cs')
+      con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
       on.exit(mysqlCloseConnection(con))
     }
     check=sql(con,paste("SELECT sum(SD_K_status > 0) n_bad, 
@@ -19,7 +19,7 @@
   
   getSD = function(snbDir = '//ds/raw_data_kemp/FIELD/Westerholz/SNB/RAWDATA',dtime,bx,filename="BOX001.TXT" ) {
     
-    con = dbcon(database = 'SNBatWESTERHOLZ2',username='snb',password = 'cs')
+    con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
     
     outname = paste(substr(dtime,1,4),substr(dtime,1,10),bx,"box001.txt",sep="/")
     outfile = paste(snbDir,outname,sep='/')
@@ -66,7 +66,7 @@
   
   getHandheld = function(snbDir = '//ds/raw_data_kemp/FIELD/Westerholz/SNB/RAWDATA',dtime, filename="box001.txt") {
     
-    con = dbcon(database = 'SNBatWESTERHOLZ2',username='snb',password = 'cs')
+    con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
     
     drv=findRemovable()
     path=paste(drv[1],"\\",dtime,sep="")

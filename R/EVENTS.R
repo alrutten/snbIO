@@ -81,7 +81,7 @@ extractEvents = function(d, min_t = 2.1) {
 }  
 
 birdIDs = function() {
-  con = dbcon(database = 'SNBatWESTERHOLZ2',username='snb',password = 'cs')
+  con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
   on.exit(dbDisconnect(con))
   
   d = sql(con,"SELECT x.*, s.sex from 
@@ -101,7 +101,7 @@ birdIDs = function() {
 }
 loadEvents = function(year_=substring(Sys.Date(),1,4)) {
 
-  con = dbcon(database = 'SNBatWESTERHOLZ2',username='snb',password = 'cs')
+  con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
   on.exit(dbDisconnect(con))
   IDs = birdIDs()
   load("/home/snb/snb_io/data/ct.Rdata")

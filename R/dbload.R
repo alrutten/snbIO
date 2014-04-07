@@ -1,7 +1,7 @@
 
 load.techxls = function(path="/ds/raw_data_kemp/FIELD/Westerholz/SNB/TECH/Details_csv/details.xlsx" ){
   
-  con = dbcon(database = 'SNBatWESTERHOLZ2',username='snb',password = 'cs')
+  con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
   on.exit(mysqlCloseConnection(con))
   
   details   = readWorksheetFromFile(path,header=TRUE,sheet=1)
@@ -67,7 +67,7 @@ loadDbase = function(year=as.numeric(format(Sys.Date(),"%Y"))){
   counter = 0
   failure = 0
   
-  con = dbcon(database = 'SNBatWESTERHOLZ2',username='snb',password = 'cs')
+  con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
   on.exit(mysqlCloseConnection(con))
   
   flist = sql(con,paste0("SELECT * FROM file_status f Where upload_status=0 and year_=",year," limit 1"))
@@ -104,7 +104,7 @@ loadSingle=function(con,id,check = TRUE,...)
 { 
   dc = FALSE
   if (missing(con)) {
-    con = dbcon(database = 'SNBatWESTERHOLZ2',username='snb',password = 'cs')
+    con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
     on.exit(mysqlCloseConnection(con))  
   }
   focal  = sql(con,paste("select * from SNBatWESTERHOLZ2.file_status where id=",id,sep=""))
