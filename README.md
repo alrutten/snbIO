@@ -1,5 +1,5 @@
 snb_io
 ======
 require(devtools)  
-install_github("snbIO","alrutten")
+install_github("snb_io","alrutten")
 
