@@ -1,4 +1,4 @@
-Package: snb_io
+Package: snbIO
 Type: Package
 Title: snb dataloading
 Version: 1.0
