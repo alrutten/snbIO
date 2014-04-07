@@ -1,9 +1,27 @@
 
 sql <- function(con, statement) {
-  res = mysqlQuickSQL(con, statement = statement)
-  return(res)
-  
-} 
+
+  if (!isIdCurrent(con)) 
+    stop(paste("expired", class(con)))
+  nr <- length(dbListResults(con))
+  if (nr > 0) {
+    new.con <- dbConnect(con)
+    on.exit(dbDisconnect(new.con))
+    rs <- dbSendQuery(new.con, statement)
+  }
+  else rs <- dbSendQuery(con, statement)
+  if (dbHasCompleted(rs)) {
+    dbClearResult(rs)
+    invisible()
+    return(NULL)
+  }
+  res <- fetch(rs, n = -1)
+  if (dbHasCompleted(rs)) 
+    dbClearResult(rs)
+  else warning("pending rows")
+  res
+}
+ 
 
 writeload = function(d, fname = tempfile(), con, db, tb) {
   write.table(d,fname,sep=',', na='\\N',quote=FALSE,row.names=FALSE, col.names=FALSE)
