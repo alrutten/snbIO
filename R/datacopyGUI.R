@@ -4,7 +4,7 @@
     dc = FALSE
     if (missing(con)) {
       con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
-      on.exit(mysqlCloseConnection(con))
+      on.exit(closeCon(con))
     }
     check=sql(con,paste("SELECT sum(SD_K_status > 0) n_bad, 
                         sum(SD_K_status>0)/count(SD_K_status) ratio, count(SD_K_Status) total 
@@ -57,7 +57,7 @@
                      out=paste("CAUTION: card not detected")
           }	
     } else out=paste('ERROR: destination file ',outfile,' already exists. File not copied!',sep="")
-    on.exit(mysqlCloseConnection(con))
+    on.exit(closeCon(con))
     cat(out)
     return(out)
   }
@@ -91,7 +91,7 @@
       }
       paste(i,' files processed',ifelse(errlist!='',paste('; NB: destination files for box(es) ',errlist,' already existed. THOSE FILES NOT COPIED',sep=""),''),sep="")
     }
-    on.exit(mysqlCloseConnection(con))
+    on.exit(closeCon(con))
   }	
   
   

@@ -2,7 +2,7 @@
 load.techxls = function(path="/ds/raw_data_kemp/FIELD/Westerholz/SNB/TECH/Details_csv/details.xlsx" ){
   
   con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
-  on.exit(mysqlCloseConnection(con))
+  on.exit(closeCon(con))
   
   details   = readWorksheetFromFile(path,header=TRUE,sheet=1)
   details   = details[!is.na(details$box),]
@@ -68,7 +68,7 @@ loadDbase = function(year=as.numeric(format(Sys.Date(),"%Y"))){
   failure = 0
   
   con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
-  on.exit(mysqlCloseConnection(con))
+  on.exit(closeCon(con))
   
   flist = sql(con,paste0("SELECT * FROM file_status f Where upload_status=0 and year_=",year," limit 1"))
   blacklist = '-1'  
@@ -105,7 +105,7 @@ loadSingle=function(con,id,check = TRUE,...)
   dc = FALSE
   if (missing(con)) {
     con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
-    on.exit(mysqlCloseConnection(con))  
+    on.exit(closeCon(con))  
   }
   focal  = sql(con,paste("select * from SNBatWESTERHOLZ2.file_status where id=",id,sep=""))
   prev   = sql(con,paste("SELECT max(date_) md from SNBatWESTERHOLZ2.file_status where box =",focal$box," and path not LIKE('%CF%') and date_ <",shQuote(focal$date_)))$md
@@ -294,7 +294,7 @@ year=sql(con,paste("select year_ from file_status where id=",id,sep=""))
 sql(con,paste("delete from RAW_",year," where id=",id,sep=""))
 sql(con,paste("delete from RAW_",(year-1)," where id=",id,sep=""))
 sql(con,paste("update file_status set upload_status=0 where id=", id, sep=""))
-if (dc) on.exit(mysqlCloseConnection(con))
+if (dc) on.exit(closeCon(con))
 }  
 
 

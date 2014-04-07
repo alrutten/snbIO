@@ -82,7 +82,7 @@ extractEvents = function(d, min_t = 2.1) {
 
 birdIDs = function() {
   con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
-  on.exit(dbDisconnect(con))
+  on.exit(closeCon(con))
   
   d = sql(con,"SELECT x.*, s.sex from 
           (SELECT distinct ID birdID, transponder, FUNCTIONS.combo(UL,LL,UR,LR) cb from BTatWESTERHOLZ.ADULTS where transponder IS NOT NULL
@@ -102,7 +102,7 @@ birdIDs = function() {
 loadEvents = function(year_=substring(Sys.Date(),1,4)) {
 
   con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
-  on.exit(dbDisconnect(con))
+  on.exit(closeCon(con))
   IDs = birdIDs()
   load("/home/snb/snb_io/data/ct.Rdata")
   vars = paste0("c('",paste(strsplit(gsub(' ','',paste(ct@data@formula$input)),'\\+')[[2]],collapse='\',\''),"')")

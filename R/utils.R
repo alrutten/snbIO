@@ -3,13 +3,8 @@ sql <- function(con, statement) {
 
   if (!isIdCurrent(con)) 
     stop(paste("expired", class(con)))
-  nr <- length(dbListResults(con))
-  if (nr > 0) {
-    new.con <- dbConnect(con)
-    on.exit(dbDisconnect(new.con))
-    rs <- dbSendQuery(new.con, statement)
-  }
-  else rs <- dbSendQuery(con, statement)
+  
+  rs <- dbSendQuery(con, statement)
   if (dbHasCompleted(rs)) {
     dbClearResult(rs)
     invisible()
