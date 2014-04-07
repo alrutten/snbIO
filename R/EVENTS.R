@@ -1,9 +1,4 @@
 
-sql <- function(con, statement) {
-  res = mysqlQuickSQL(con, statement = statement)
-  return(res)
-  
-}
 assignEvents = function(d,maxt = 2.1) {
   #d must have datetime_, r_pk, transp, box, bout_length, LB
   # returns d plus boutID
