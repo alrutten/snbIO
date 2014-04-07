@@ -5,6 +5,6 @@ Version: 1.0
 Date: 2014-02-17
 Author: Anne Rutten
 Maintainer: Anne Rutten <arutten@orn.mpg.de>
-Depends: sdb,tcltk, tcltk2,party, plyr, DBI
+Depends: sdb,tcltk, tcltk2,party, plyr
 Description: copy data to server and upload to scidb database
 License: GPL
