@@ -104,7 +104,7 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
   con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
   on.exit(closeCon(con))
   IDs = birdIDs()
-  load("/home/snb/snb_io/data/ct.Rdata")
+  data(ct)
   vars = paste0("c('",paste(strsplit(gsub(' ','',paste(ct@data@formula$input)),'\\+')[[2]],collapse='\',\''),"')")
   keepvars = names(dbq(con,'select * from BETA_Events2014 limit 1'))
   #fids = dbq(con,'select id from file_status where year_ = 2013 and box between 100 and 201 order by id desc')$id
