@@ -120,7 +120,7 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
           nulls = ddply(nulls,.(box,datetime_,transp,id),summarise, count = -1)
           nulls = merge(nulls,IDs, by.x='transp',by.y='transponder',all.x=TRUE,incomparables = NA) 
           nulls[,setdiff(keepvars, names(nulls))] = NA
-          if (class(con)=='RODBC') then sqlSave(con,nulls[,keepvars],paste0('BETA_Events',year_),rownames=FALSE,append=TRUE) else
+          if (class(con)=='RODBC')  sqlSave(con,nulls[,keepvars],paste0('BETA_Events',year_),rownames=FALSE,append=TRUE) else
                                         dbWriteTable(con,paste0('BETA_Events',year_),nulls[,keepvars],row.names=FALSE,append=TRUE)
         }
         d = d[!is.na(d$datetime_),]
