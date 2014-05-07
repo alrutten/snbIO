@@ -134,7 +134,7 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
                  
           dd = merge(dd,IDs, by.x='transp',by.y='transponder',all.x=TRUE,incomparables = NA) 
         
-         if (class(con)=='RODBC') then  sqlSave(con,dd[,keepvars],paste0('BETA_Events',year_),rownames=FALSE,append=TRUE)  else
+         if (class(con)=='RODBC') sqlSave(con,dd[,keepvars],paste0('BETA_Events',year_),rownames=FALSE,append=TRUE)  else
                                          dbWriteTable(con,paste0('BETA_Events',year_),dd[,keepvars],row.names=FALSE,append=TRUE)
         }
       }
