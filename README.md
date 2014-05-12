@@ -1,5 +1,5 @@
-snb_io
+snbIO
 ======
 require(devtools)  
-install_github("snb_io","alrutten")
+install_github('mpioSNB/snbIO')
 
