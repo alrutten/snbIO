@@ -69,8 +69,13 @@ extractEvents = function(d, min_t = 2.1) {
   # discard events where there's no transit and no transponder
   events=events[!(!events$anyLB12&is.na(events$transp)),] 
   
-  events$LBdir = events$last_LB - events$first_LB
-  events$LBdir[is.na(events$LBdir)] = 0
+  #events$LBdir = events$last_LB - events$first_LB
+  events$LBdir=0
+	events$LBdir[which(events$first_LB==-1)] = 1
+	events$LBdir[which(events$first_LB==1)] = 2
+	events$LBdir[which(events$last_LB==1 & events$first_LB!=1)] = 1
+	events$LBdir[which(events$last_LB==0 & events$first_LB!=-1)] = 2
+  
   #do previouses per transponder
   events = events[order(events$transp,events$startt),]
   prevevents = ddply(events,.(transp),  function(x) rbind(x[1,], x[-nrow(x),]))		
@@ -133,6 +138,8 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
           dd = assignEvents(d)
           dd = extractEvents(dd)
         if (nrow(dd)>0) {
+          #2014-07-16: changed LBdir to 1(in), 2(out), 0(none); didn't update tree
+          dd$LBdir[dd$LBdir==2] = -1
           dd$direction_raw = round(predict(ct,newdata = dd[,eval(parse(text=vars))]),2)
           dd$direction = round(dd$direction_raw,0)
           dd$direction[abs(dd$direction_raw-dd$direction)>0.1] = 0
