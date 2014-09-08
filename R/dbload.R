@@ -85,7 +85,7 @@ loadDbase = function(year=as.numeric(format(Sys.Date(),"%Y"))){
     
     foo = try(loadSingle(con=con, id=flist$id, check = FALSE))
     
-    if (class(foo) == 'try-error') {
+     if (class(foo) == 'try-error'|flist$filesize==0) {
       blacklist = c(blacklist,flist$id)
       failure = failure+1
     }
