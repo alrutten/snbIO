@@ -118,9 +118,12 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
   vars = paste0("c('",paste(strsplit(gsub(' ','',paste(ct@data@formula$input)),'\\+')[[2]],collapse='\',\''),"')")
   keepvars =  dbq(con, "SHOW COLUMNS FROM ALL_EVENTS FROM SNBatWESTERHOLZ2")$Field
   #fids = dbq(con,'select id from file_status where year_ = 2013 and box between 100 and 201 order by id desc')$id
+  
+  #see if there is new data to be processed
   foo = try({fids = dbq(con, paste0("select f.id from file_status f 
                                     LEFT JOIN (select distinct id from BETA_Events",year_,") b on f.id = b.id 
                                     where b.id IS NULL and year_ = ",year_," order by id desc"))$id},silent=TRUE)
+  
   if ((!class(foo)=='try-error')&length(fids)>0) {
     for (i in 1:length(fids)) {
       d = dbq(con, paste0("select * from RAW_",year_," where id = ",fids[i]))
@@ -130,8 +133,7 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
           nulls = ddply(nulls,.(box,datetime_,transp,id),summarise, count = -1)
           nulls = merge(nulls,IDs, by.x='transp',by.y='transponder',all.x=TRUE,incomparables = NA) 
           nulls[,setdiff(keepvars, names(nulls))] = NA
-          if (class(con)=='RODBC')  sqlSave(con,nulls[,keepvars],paste0('BETA_Events',year_),rownames=FALSE,append=TRUE) else
-                                        dbWriteTable(con,paste0('BETA_Events',year_),nulls[,keepvars],row.names=FALSE,append=TRUE)
+         writeload(nulls,con=con,db='SNBatWESTERHOLZ2',tb = paste0('BETA_Events',year_))
         }
         d = d[!is.na(d$datetime_),]
         if (nrow(d)>0) {
@@ -146,8 +148,7 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
                  
           dd = merge(dd,IDs, by.x='transp',by.y='transponder',all.x=TRUE,incomparables = NA) 
         
-         if (class(con)=='RODBC') sqlSave(con,dd[,keepvars],paste0('BETA_Events',year_),rownames=FALSE,append=TRUE)  else
-                                         dbWriteTable(con,paste0('BETA_Events',year_),dd[,keepvars],row.names=FALSE,append=TRUE)
+          writeload(dd[,keepvars],con=con,db='SNBatWESTERHOLZ2',tb = paste0('BETA_Events',year_),ignore=TRUE)
         }
       }
     }

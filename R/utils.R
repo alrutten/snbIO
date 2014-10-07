@@ -1,9 +1,11 @@
 
 
-writeload = function(d, fname = tempfile(), con, db, tb) {
+writeload = function(d, fname = tempfile(), con, db, tb, ignore = FALSE) {
   write.table(d,fname,sep=',', na='\\N',quote=FALSE,row.names=FALSE, col.names=FALSE)
-  foo = dbq(con,paste0("LOAD DATA LOCAL INFILE ", shQuote(fname), " INTO TABLE ",paste(db,tb,sep='.'), 
-                       " CHARACTER SET latin1 FIELDS TERMINATED BY ',';"))
+  if (ignore) foo = dbq(con,paste0("LOAD DATA LOCAL INFILE ", shQuote(fname), " IGNORE INTO TABLE ",paste(db,tb,sep='.'), 
+                       " CHARACTER SET latin1 FIELDS TERMINATED BY ',';")) else
+              foo = dbq(con,paste0("LOAD DATA LOCAL INFILE ", shQuote(fname), " INTO TABLE ",paste(db,tb,sep='.'), 
+                                              " CHARACTER SET latin1 FIELDS TERMINATED BY ',';"))           
   file.remove(fname)
   return(foo)
 }
