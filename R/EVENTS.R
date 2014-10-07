@@ -68,21 +68,22 @@ extractEvents = function(d, min_t = 2.1) {
                ratio_l_bl = n_lines/sum_bl)
   # discard events where there's no transit and no transponder
   events=events[!(!events$anyLB12&is.na(events$transp)),] 
-  
+  if (nrow(events)>0) {
   #events$LBdir = events$last_LB - events$first_LB
-  events$LBdir=0
-	events$LBdir[which(events$first_LB==-1)] = 1
-	events$LBdir[which(events$first_LB==1)] = 2
-	events$LBdir[which(events$last_LB==1 & events$first_LB!=1)] = 1
-	events$LBdir[which(events$last_LB==0 & events$first_LB!=-1)] = 2
+    events$LBdir=0
+	  events$LBdir[which(events$first_LB==-1)] = 1
+	  events$LBdir[which(events$first_LB==1)] = 2
+	  events$LBdir[which(events$last_LB==1 & events$first_LB!=1)] = 1
+	  events$LBdir[which(events$last_LB==0 & events$first_LB!=-1)] = 2
   
   #do previouses per transponder
-  events = events[order(events$transp,events$startt),]
-  prevevents = ddply(events,.(transp),  function(x) rbind(x[1,], x[-nrow(x),]))		
-  names(prevevents) = paste0('prev_',names(events)) 
-  events = cbind(events,prevevents[,c('prev_n_lines','prev_sum_bl','prev_startt','prev_transp','prev_LBdir')])
-  events$ratio_l_prevl = events$n_lines/events$prev_n_lines
-  return(events[order(events$startt),])
+    events = events[order(events$transp,events$startt),]
+    prevevents = ddply(events,.(transp),  function(x) rbind(x[1,], x[-nrow(x),]))		
+    names(prevevents) = paste0('prev_',names(events)) 
+    events = cbind(events,prevevents[,c('prev_n_lines','prev_sum_bl','prev_startt','prev_transp','prev_LBdir')])
+    events$ratio_l_prevl = events$n_lines/events$prev_n_lines
+    }
+   return(events[order(events$startt),])
 }  
 
 birdIDs = function() {
