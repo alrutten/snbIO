@@ -134,7 +134,7 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
           nulls = ddply(nulls,.(box,datetime_,transp,id),summarise, count = -1)
           nulls = merge(nulls,IDs, by.x='transp',by.y='transponder',all.x=TRUE,incomparables = NA) 
           nulls[,setdiff(keepvars, names(nulls))] = NA
-         writeload(nulls,con=con,db='SNBatWESTERHOLZ2',tb = paste0('BETA_Events',year_))
+         writeload(nulls[,keepvars],con=con,db='SNBatWESTERHOLZ2',tb = paste0('BETA_Events',year_))
         }
         d = d[!is.na(d$datetime_),]
         if (nrow(d)>0) {
