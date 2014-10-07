@@ -116,7 +116,7 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
   IDs = birdIDs()
   data(ct)
   vars = paste0("c('",paste(strsplit(gsub(' ','',paste(ct@data@formula$input)),'\\+')[[2]],collapse='\',\''),"')")
-  keepvars = names(dbq(con,'select * from BETA_Events2014 limit 1'))
+  keepvars =  dbq(con, "SHOW COLUMNS FROM ALL_EVENTS FROM SNBatWESTERHOLZ2")$Field
   #fids = dbq(con,'select id from file_status where year_ = 2013 and box between 100 and 201 order by id desc')$id
   foo = try({fids = dbq(con, paste0("select f.id from file_status f 
                                     LEFT JOIN (select distinct id from BETA_Events",year_,") b on f.id = b.id 
