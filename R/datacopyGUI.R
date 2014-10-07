@@ -176,4 +176,22 @@
     foo=gsub(".*is\ ","",foo[2])
     return(foo)
   }
-  
+  retireSD = function() {
+    
+    sdw=tktoplevel()
+    onOk = function() {
+      con = dbcon(database='TECHatWESTERHOLZ',user='snb',password='cs')
+      drv = findRemovable()
+      if (length(drv)>0) {
+        SDid = getSDserial(drv)
+        dbq(con,paste('INSERT IGNORE INTO TECHatWESTERHOLZ.SD_end (SDid) VALUES (',shQuote(SDid),')'))
+        tkmessageBox(message = paste(SDid,'retired'))
+        closeCon(con)
+      } else tkmessageBox('card not detected')
+    }
+    OK.but <-tkbutton(sdw,text="retire SDcard",command=function() onOk())
+    Cancel.But =tkbutton(sdw,text="CANCEL/DONE",command=function() tkdestroy(sdw))
+    tkgrid(OK.but,Cancel.But)
+    
+    
+  }
