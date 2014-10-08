@@ -187,7 +187,7 @@
         dbq(con,paste('INSERT IGNORE INTO TECHatWESTERHOLZ.SD_end (SDid) VALUES (',shQuote(SDid),')'))
         tkmessageBox(message = paste(SDid,'retired'))
         closeCon(con)
-      } else tkmessageBox('card not detected')
+      } else tkmessageBox(message='card not detected')
     }
     OK.but <-tkbutton(sdw,text="retire SDcard",command=function() onOk())
     Cancel.But =tkbutton(sdw,text="CANCEL/DONE",command=function() tkdestroy(sdw))
