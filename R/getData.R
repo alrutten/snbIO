@@ -18,7 +18,8 @@ boxon_data = function(con, startd=Sys.Date()-31,endd=Sys.Date(), bx= c(1:277))
                                from file_status g 
                                where g.box in (",paste(bx,collapse = ','),") 
                                  and upload_status >0 and (",shQuote(startd)," between date_prev and date_ 
-                                                           or ",shQuote(endd)," between date_prev and date_)
+                                                           or ",shQuote(endd)," between date_prev and date_
+                                                            or date_ between ",shQuote(startd)," and ",shQuote(endd),")
 
                                ORDER BY box, date_"))	
   
