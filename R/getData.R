@@ -17,18 +17,16 @@ boxon_data = function(con, startd=Sys.Date()-31,endd=Sys.Date(), bx= c(1:277))
   onoff     = dbq(con,paste0("SELECT box,date_,date_prev startd,dt_last,upload_status 
                                from file_status g 
                                where g.box in (",paste(bx,collapse = ','),") 
-                                 and upload_status >0 
+                                 and upload_status >0 and (",shQuote(startd)," between date_prev and date_ 
+                                                           or ",shQuote(endd)," between date_prev and date_)
+
                                ORDER BY box, date_"))	
   
   onoff$date_  = as.POSIXct(onoff$date_,tz = 'UTC')
   onoff$startd = as.POSIXct(onoff$startd,tz = 'UTC')
   onoff$dt_last =as.POSIXct(strptime(onoff$dt_last, format = '%Y-%m-%d %H:%M:%S',tz='UTC'))
   
-  #find the first and the last file, with margins
-  
-    onoff$select = ifelse((onoff$startd<=startd&onoff$date_>startd)|onoff$date_>endd,1,0)
-  onoff           = ddply(onoff,.(box),transform, select = cumsum(select))
-  onoff           = onoff[which(onoff$select==1),]	
+ 
   
   #cutoff
   onoff$startd[which(onoff$startd<startd)] = startd
