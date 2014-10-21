@@ -2,7 +2,7 @@
 
 writeload = function(d, fname = tempfile(), con, db, tb, ignore = FALSE, charset = 'latin1') {
   #ignore is for INSERT IGNORE
-  write.table(d,fname,sep=',', na='\\N',quote=FALSE,row.names=FALSE, col.names=FALSE)
+  write.table(d,fname,sep=',', na='\\N',quote=FALSE,row.names=FALSE, col.names=FALSE,fileEncoding = charset)
   if (ignore) foo = dbq(con,paste0("LOAD DATA LOCAL INFILE ", shQuote(fname), " IGNORE INTO TABLE ",paste(db,tb,sep='.'), 
                        " CHARACTER SET ",charset," FIELDS TERMINATED BY ',';")) else
               foo = dbq(con,paste0("LOAD DATA LOCAL INFILE ", shQuote(fname), " INTO TABLE ",paste(db,tb,sep='.'), 
