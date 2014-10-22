@@ -41,16 +41,18 @@
           insize=file.info(filename)$size   # this information is no longer accessible after trying file.copy because of i/o errors    
           file.copy(filename,outfile,overwrite=FALSE) #sadly, file.copy() returns TRUE for partial copies
           
-          dbq(con,paste("INSERT INTO SNBatWESTERHOLZ2.file_status (path,year_,date_,date_prev,filesize,box,upload_status,boxversion) VALUES('",outname,"',",substr(dtime,1,4),
+          #catch network connectivity problem during copying (file.copy returns TRUE but outfile does not exist
+          if is.na(file.info(outfile$size)) out = ('network problem: \nremove card\nput back into reader\nclick "start upload" again') else {
+            dbq(con,paste("INSERT INTO SNBatWESTERHOLZ2.file_status (path,year_,date_,date_prev,filesize,box,upload_status,boxversion) VALUES('",outname,"',",substr(dtime,1,4),
                         ",'",dtime,"',",shQuote(prev),",",file.info(outfile)$size/1000,",",bx,",0,0)",sep=""))
           
-          if (insize == file.info(outfile)$size) {
-            dbq(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_K_Aktion,SD_ID) VALUES('",dtime,"','",bx,"','0','0','",Sdsn,"')",sep=""))
-            out=paste("file copied without problems\n",out,'\n')
-          } else{	
-            dbq(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_K_Aktion,SD_ID) VALUES('",dtime,"','",bx,"','5','3','",Sdsn,"')",sep=""))
-            out=paste("card damaged, file partly recovered\n",out,"\n")
-          } } else{
+            if (insize == file.info(outfile)$size) {
+              dbq(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_K_Aktion,SD_ID) VALUES('",dtime,"','",bx,"','0','0','",Sdsn,"')",sep=""))
+              out=paste("file copied without problems\n",out,'\n')
+            } else{	
+              dbq(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_K_Aktion,SD_ID) VALUES('",dtime,"','",bx,"','5','3','",Sdsn,"')",sep=""))
+              out=paste("card damaged, file partly recovered\n",out,"\n")
+             } } } else{
             dbq(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_ID) VALUES('",dtime,"','",bx,"','3','",Sdsn,"')",sep=""))
             out=paste("No file on card\n",out,"\n")
           } } else {	dbq(con,paste("INSERT INTO TECHatWESTERHOLZ.technical_details (date_time_field,box,SD_K_Status,SD_ID) VALUES('",dtime,"','",bx,"','1','NULL')",sep=""))
