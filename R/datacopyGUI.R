@@ -42,7 +42,7 @@
           file.copy(filename,outfile,overwrite=FALSE) #sadly, file.copy() returns TRUE for partial copies
           
           #catch network connectivity problem during copying (file.copy returns TRUE but outfile does not exist
-          if (is.na(file.info(outfile$size))) out = ('network problem: \nremove card\nput back into reader\nclick "start upload" again') else {
+          if (is.na(file.info(outfile)$size)) out = ('network problem: \nremove card\nput back into reader\nclick "start upload" again') else {
             dbq(con,paste("INSERT INTO SNBatWESTERHOLZ2.file_status (path,year_,date_,date_prev,filesize,box,upload_status,boxversion) VALUES('",outname,"',",substr(dtime,1,4),
                         ",'",dtime,"',",shQuote(prev),",",file.info(outfile)$size/1000,",",bx,",0,0)",sep=""))
           
