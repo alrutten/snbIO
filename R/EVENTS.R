@@ -90,22 +90,7 @@ birdIDs = function() {
   con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
   on.exit(closeCon(con))
   
-  d = dbq(con,"SELECT x.*, s.sex from 
-          (SELECT distinct ID birdID, transponder, FUNCTIONS.combo(UL,LL,UR,LR) cb 
-            from BTatWESTERHOLZ.ADULTS 
-            where transponder IS NOT NULL and coalesce(UL,LL,UR,LR) IS NOT NULL
-           UNION SELECT distinct c.ID birdID, c.transponder, FUNCTIONS.combo(a.UL,a.LL,a.UR,a.LR) cb 
-            from BTatWESTERHOLZ.CHICKS c 
-            LEFT JOIN BTatWESTERHOLZ.ADULTS a on c.ID = a.ID where c.transponder IS NOT NULL
-           UNION SELECT distinct ID birdID, transponder, FUNCTIONS.combo(UL,LL,UR,LR) cb 
-            from FIELD_BTatWESTERHOLZ.ADULTS 
-            where transponder IS NOT NULL and coalesce(UL,LL,UR,LR) IS NOT NULL
-          UNION SELECT 'fieldteam' birdID, transponder, 'fieldteam' cb from SNBatWESTERHOLZ2.test_transponders 
-          )x
-          left join BTatWESTERHOLZ.SEX s on x.birdID = s.ID
-          
-          order by transponder
-          "
+  return(dbq(con,snipFetch(59)))
   )
   
   return(d)
