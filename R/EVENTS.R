@@ -91,9 +91,7 @@ birdIDs = function() {
   on.exit(closeCon(con))
   
   return(dbq(con,snipFetch(59)))
-  )
   
-  return(d)
 }
 loadEvents = function(year_=substring(Sys.Date(),1,4)) {
 
