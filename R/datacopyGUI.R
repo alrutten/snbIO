@@ -178,21 +178,31 @@
     foo=gsub(".*is\ ","",foo[2])
     return(foo)
   }
-  retireSD = function() {
+  SDmaintenance = function() {
     
     sdw=tktoplevel()
+    rb1 <- tkradiobutton(sdw)
+    rb2 <- tkradiobutton(sdw)
+    rbValue <- tclVar("retired")
+    tkconfigure(rb1,variable=rbValue,value="retired")
+    tkconfigure(rb2,variable=rbValue,value="glued")
+    
     onOk = function() {
       con = dbcon(database='TECHatWESTERHOLZ',user='snb',password='cs')
       drv = findRemovable()
       if (length(drv)>0) {
         SDid = getSDserial(drv)
-        dbq(con,paste('INSERT IGNORE INTO TECHatWESTERHOLZ.SD_end (SDid) VALUES (',shQuote(SDid),')'))
-        tkmessageBox(message = paste(SDid,'retired'))
+        rbVal = as.character(tclvalue(rbValue))
+        dbq(con,paste('INSERT INTO TECHatWESTERHOLZ.SD_maintenance (SDid,action) VALUES (',shQuote(SDid),',',shQuote(rbVal),')'))
+        tkmessageBox(message = paste(SDid,rbVal))
         closeCon(con)
       } else tkmessageBox(message='card not detected')
     }
-    OK.but <-tkbutton(sdw,text="retire SDcard",command=function() onOk())
+    OK.but <-tkbutton(sdw,text="GO",command=function() onOk())
     Cancel.But =tkbutton(sdw,text="CANCEL/DONE",command=function() tkdestroy(sdw))
+    tkgrid(tklabel(sdw,text=''),tklabel(sdw, text = "this SD card has been:"))
+    tkgrid(rb1,tklabel(sdw,text='retired'),sticky='w')
+    tkgrid(rb2,tklabel(sdw,text='glued'),sticky='w')
     tkgrid(OK.but,Cancel.But)
     
     
