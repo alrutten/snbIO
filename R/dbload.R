@@ -62,13 +62,14 @@ readRaw = function(snbdir = snbDir, path){
 
 
 
-loadDbase = function(year=as.numeric(format(Sys.Date(),"%Y"))){
+loadDbase = function(year=as.numeric(format(Sys.Date(),"%Y")),db='SNBatWESTERHOLZ2'){
   
   counter = 0
   failure = 0
   
-  con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
+  con = dbcon(database = db,user='snb',password = 'cs')
   on.exit(closeCon(con))
+  
   
   flist = dbq(con,paste0("SELECT * FROM file_status f Where upload_status=0 and year_=",year," limit 1"))
   blacklist = '-1'  
@@ -83,7 +84,7 @@ loadDbase = function(year=as.numeric(format(Sys.Date(),"%Y"))){
     
     
     
-    foo = try(loadSingle(con=con, id=flist$id, check = FALSE))
+    foo = try(loadSingle(con=con, id=flist$id, check = FALSE,db=db))
     
      if (class(foo) == 'try-error'|flist$filesize==0) {
       blacklist = c(blacklist,flist$id)
@@ -100,35 +101,45 @@ loadDbase = function(year=as.numeric(format(Sys.Date(),"%Y"))){
   
 }	
 
-loadSingle=function(con,id,check = TRUE,...) 
+loadSingle=function(con,id,check = TRUE,db='SNBatWESTERHOLZ2',...) 
 { 
-  dc = FALSE
+ 
   if (missing(con)) {
-    con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
+    con = dbcon(database = db,user='snb',password = 'cs')
     on.exit(closeCon(con))  
   }
-  focal  = dbq(con,paste("select * from SNBatWESTERHOLZ2.file_status where id=",id,sep=""))
-  prev   = dbq(con,paste("SELECT max(date_) md from SNBatWESTERHOLZ2.file_status where box =",focal$box," and path not LIKE('%CF%') and date_ <",shQuote(focal$date_)))$md
+  
+  focal  = dbq(con,paste("select * from file_status where id=",id,sep=""))
+  
+  #sf or snb
+ 
+  rawdir = ifelse(grepl('SNB',db),snbDir,sfDir)
+  keepvars = dbq(con,paste0("SHOW COLUMNS FROM RAW_",focal$year_," FROM ",db))$Field
+  idvar = ifelse(grepl('SNB',db),'box','feeder')
+  
+  prev   = dbq(con,paste("SELECT max(date_) md from file_status where",idvar,"=",focal[,idvar]," and path not LIKE('%CF%') and date_ <",shQuote(focal$date_)))$md
+  
   year   = focal[1,"year_"]
-  if (is.na(prev)) prev = as.POSIXct(focal$date_)-get('SD_interval', envir = .snb) *86400
+  #if (is.na(prev)) prev = as.POSIXct(focal$date_)-get('SD_interval', envir = .snb) *86400
   
   if (check) {
-    indb=dbq(con,paste("select * from SNBatWESTERHOLZ2.RAW_",year," where id=",id," limit 1",sep=""))
+    indb=dbq(con,paste0("select * from RAW_",year," where id=",id," limit 1",sep=""))
     if (nrow(indb)>0) dropSingle(con=con,id=id)
   }
   # read & extract data
   
-  dframe=extractVars(readRaw(path=focal[1,"path"]))
+  dframe=extractVars(readRaw(snbdir = rawdir,path=focal[1,"path"]))
   
   
-  rawchar=dframe$rawchar[1] #THIS HAS TO GO FROM read as well
-  dframe$rawchar=NULL
+  rawchar = dframe$rawchar[1] #THIS HAS TO GO FROM read as well
+
   focal$upload_status = dframe$status[1]
   # CHECKS
 {
   
   # valid/non-NA datetimes
-  days    = format(seq.Date(from=as.Date(prev)-1,to=as.Date(focal$date_)+1,by='day'),format='%m-%d')
+  startt = ifelse(is.na(prev),as.Date(as.POSIXct(focal$date_)-60 *86400),prev)
+  days    = format(seq.Date(from=as.Date(startt)-1,to=as.Date(focal$date_)+1,by='day'),format='%m-%d')
   dtvalid = round(100*(sum(!is.na(dframe$datetime_)&dframe$bout_length!=-1&format(dframe$datetime_,format = '%m-%d')%in%days))/nrow(dframe),2)
   na_dt   = dtvalid<100
   
@@ -142,12 +153,12 @@ loadSingle=function(con,id,check = TRUE,...)
   n_timejumps = sum(as.numeric(c(dframe$datetime_[-1], dframe$datetime_[length(as.vector(dframe$datetime_))])) <
                       as.numeric(dframe$datetime_), na.rm = TRUE)
   
-  focal$year_valid	   = yrvalid
+  focal$year_valid	    = yrvalid
   focal$datetime_valid  = dtvalid
   focal$n_timejumps     = n_timejumps  
   
   if (!na_dt) {  # ONLY try to correct year if there is nothing fishy with any datetime_	 
-    if (wy) #wrong year
+    if (wy) #wrong year: replace year in datetime_ with current (or previous) year
     {
       dframe$datetime_ = as.POSIXct(strptime(ifelse(as.numeric(format(dframe$datetime_,"%m"))<= 
                                                       as.numeric(substring(focal[1,"date_"],6,7)),
@@ -163,21 +174,23 @@ loadSingle=function(con,id,check = TRUE,...)
 
 if (nrow(dframe)>0)
 {
-  dframe=dframe[,-c(3,4,6,10)]
-  dframe$id=focal[1,"id"]
-  dframe$box=focal[1,"box"]
   
   lastBat = tail(dframe[which(!is.na(dframe$bv)),],1)
   if (nrow(lastBat)==0) lastBat = data.frame(datetime_ = -1,bv = 'BV-1.0V')
   
   
+  dframe$id=focal[1,"id"]
+  dframe$box=focal[1,idvar]
+  dframe$feeder = focal[1,idvar]
   dframe$r_pk=NA
   
+  dframe=dframe[,keepvars]
+
   
   
   if (nrow(dframe)>1)	{
-    foo =  writeload(d=dframe[,c('box','datetime_','PIR','LB','id','transp','bv','bout_length','r_pk')], con=con, db='SNBatWESTERHOLZ2', tb = paste0("RAW_",focal$year_[1]))
-    if (is.null(foo)) dbq(con,paste("Update SNBatWESTERHOLZ2.file_status SET upload_status=",focal[1,"upload_status"], 
+    foo =  writeload(d=dframe, con=con, db=db, tb = paste0("RAW_",focal$year_[1]))
+    if (is.null(foo)) dbq(con,paste("Update file_status SET upload_status=",focal[1,"upload_status"], 
                                     ", datetime_valid=",focal[1,"datetime_valid"],
                                     ", year_valid=",focal[1,"year_valid"],
                                     ", n_timejumps=",focal[1,"n_timejumps"],
@@ -186,14 +199,14 @@ if (nrow(dframe)>0)
                                     "', lastRT=-1
                                     , lastBV=", substring(lastBat[1,"bv"],3,6),
                                     ", dt_last='", max(dframe$datetime_,na.rm = TRUE), 
-                                    "' WHERE id =",focal[1,"id"],sep=""))  else  dbq(con, paste("Update SNBatWESTERHOLZ2.file_status SET upload_status = -1 WHERE id=", focal[1,"id"]))	
+                                    "' WHERE id =",focal[1,"id"],sep=""))  else  dbq(con, paste("Update file_status SET upload_status = -1 WHERE id=", focal[1,"id"]))	
     
   }	
   
 } else 
 {
-  dbq(con, paste("Update SNBatWESTERHOLZ2.file_status SET upload_status = -1 WHERE id=", focal[1,"id"]))	
-  dbq(con, paste('Update SNBatWESTERHOLZ2.file_status SET remarks ="upload unsuccessful critical errors" WHERE id=',focal[1,"id"]))
+  dbq(con, paste("Update file_status SET upload_status = -1 WHERE id=", focal[1,"id"]))	
+  dbq(con, paste('Update file_status SET remarks ="upload unsuccessful critical errors" WHERE id=',focal[1,"id"]))
 }
 
 gc()

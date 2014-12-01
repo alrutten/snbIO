@@ -140,3 +140,36 @@ loadEvents = function(year_=substring(Sys.Date(),1,4)) {
   }
 }
 
+LoadSFEvents = function(cutoff=2) {
+  
+  con = dbcon(database = 'SFatWESTERHOLZ',user='snb',password = 'cs')
+  on.exit(closeCon(con))
+  IDs = birdIDs()
+  
+  
+  foo = try({fids = dbq(con, "select year_, f.id from file_status f 
+                                    LEFT JOIN (select distinct id from ALL_EVENTS) b on f.id = b.id 
+                                    where b.id IS NULL order by id desc")},silent=TRUE)
+  
+  if ((!class(foo)=='try-error')&nrow(fids)>0) {
+    for (i in 1:nrow(fids)) {
+      d = dbq(con, paste0("select * from RAW_",fids$year_[i]," where id = ",fids$id[i]," 
+                           and transp IS NOT NULL order by datetime_ asc"))
+      nulls = unique(subset(d,is.na(datetime_)))
+      d = subset(d,!is.na(datetime_))
+      d$prev = c(d$datetime_[1],d$datetime_[-nrow(d)])
+      d$event = 0
+      d$event = cumsum(as.numeric(as.numeric(difftime(as.POSIXct(d$datetime_),as.POSIXct(d$prev)))>cutoff ))#new visit if no reading for 2 seconds
+      events = ddply(d,.(event,transp,id,feeder),summarise,startt = min(as.POSIXct(datetime_),na.rm=TRUE),
+                                                endt = max(as.POSIXct(datetime_),na.rm=TRUE))
+      if (nrow(nulls)>0) events = rbind(events, data.frame(event=NA,feeder=nulls$feeder,transp = nulls$transp,startt = NA,endt=NA,id=nulls$id))
+      
+      events = merge(events,IDs,all.x=TRUE,by.x='transp',by.y='transponder')
+      
+      keepvars = dbq(con,"SHOW COLUMNS FROM ALL_EVENTS from SFatWESTERHOLZ")$Field
+      navars = setdiff(keepvars,names(events))
+      events[,navars]=NA
+      writeload(events[,keepvars],con=con,db='SFatWESTERHOLZ',tb = 'ALL_EVENTS',ignore=TRUE)
+    }
+  }
+}
