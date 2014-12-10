@@ -128,7 +128,7 @@
   
   
   
-  getHandheld = function(snbDir =snbDir,dtime, filename="box001.txt") {
+  getHandheld = function(rawDir =snbDir,dtime, filename="box001.txt") {
     
     con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
     
@@ -143,7 +143,7 @@
     if (length(flist)==0) return("nothing to upload") else
     {
       for (i in (1:length(flist))) {
-        outdir=paste(snbDir,substr(dtime,1,4),paste(substr(dtime,1,10),"CF",sep=""),tolower(boxlist[i]),sep="/")
+        outdir=paste(rawDir,substr(dtime,1,4),paste(substr(dtime,1,10),"CF",sep=""),tolower(boxlist[i]),sep="/")
         mtime=file.info(flist[i])$mtime
         prev = dbq(con,paste("SELECT max(date_time_field) md from TECHatWESTERHOLZ.technical_details where box = ",tolower(boxlist[i])," and SD_K_Status IS NOT NULL and date_time_field<",shQuote(mtime)))$md
         dir.create(outdir,recursive=TRUE)
