@@ -105,7 +105,7 @@
               snbvars = dbq(con, "SHOW COLUMNS FROM file_status FROM SNBatWESTERHOLZ2")$Field
               snbna = setdiff(snbvars,names(metadata))
               metadata[,snbna] = NA
-              if (!is.na(snbvars$path))  writeload(metadata[,snbvars],con=con,db='SNBatWESTERHOLZ2',tb = 'file_status')
+              if (!is.na(metadata$path))  writeload(metadata[,snbvars],con=con,db='SNBatWESTERHOLZ2',tb = 'file_status')
               
               dbq(con,"USE TECHatWESTERHOLZ")
              
