@@ -246,6 +246,7 @@
   getSDserial = function(SDdir) { 
     foo=shell(paste("dir ",SDdir,sep=""),intern=TRUE)
     foo=gsub(".*is\ ","",foo[2])
+    foo = matchGregexpr('.{4}-.{4}',foo)$match
     return(foo)
   }
   SDmaintenance = function() {
