@@ -1,4 +1,25 @@
-
+#' write to tempfile & load to db
+#' 
+#' @usage writeload((d, fname = gsub('\\\\','/',tempfile()), con, db, tb, ignore
+#'   = FALSE, charset = 'latin1')
+#'   
+#' @param d a dataframe for upload to table db.tb, note that function does not 
+#'   check variable names.
+#' @param fname tempfile used to save data (gets deleted afterwards, which means
+#'   it doesn't make much sense to have it in the parameters.).
+#' @param con an open connection to db.tb
+#' @param db database where table tb is
+#' @param tb tablename to write data to
+#' @param ignore should conflicts be ignored
+#' @param charset character set dataframe d is in. Loading special characters 
+#'   from one character set to a db.tb in a different character set leads to 
+#'   problems.
+#'   
+#' @details this function roughly does what \code{\link{dbWriteTable}} does, 
+#'   except you can specify IGNORE which means you can load data into a table 
+#'   with a UNIQUE index and thus avoid uploading duplicates, which is useful 
+#'   for BETA_Events (because CF files my contain duplicate data) and 
+#'   META_SnbStatus.
 
 writeload = function(d, fname = gsub('\\\\','/',tempfile()), con, db, tb, ignore = FALSE, charset = 'latin1') {
   #ignore is for INSERT IGNORE

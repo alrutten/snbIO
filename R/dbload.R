@@ -44,18 +44,26 @@ readRaw = function(snbdir = snbDir, path){
   }
   
   d = read.table(file=fname,colClasses="character",row.names=NULL,col.names="V1",comment.char="",blank.lines.skip=TRUE)
-  
+  #catch multibyte fuckery
+  mbfuckery = 0
+  mb = try(is.clean(d$V1)) #sadly, only the first row with multibyte characters is reported
+  while (class(mb)=="try-error") {
+    mbmatch = matchGregexpr('[1234567890]+',mb[1])$match
+    d = data.frame(V1 = d$V1[-c(as.numeric(mbmatch))],stringsAsFactors=FALSE) #one-variable dataframe gets converted to a vector when removing rows by index
+    mbfuckery = mbfuckery + 1 #to add to nchar later, so that this file shows up as 'junk in file'.
+    mb = try(is.clean(d$V1))
+  }
   if (nrow(d)>0){  
-    if (is.clean(d$V1)) {
+    if (!mb) {
       status=1
       bouts = data.frame(full=rle(d$V1)[[2]], bout_length = rle(d$V1)[[1]],stringsAsFactors=FALSE)	}	 else {
         
         status=2
-        bouts=readGrexp(d, path=fname)
+        bouts=readGrexp(d=d, path=fname)
         
       }
     bouts$status=status
-    bouts$rawchar=sum(nchar(d$V1))		
+    bouts$rawchar=sum(nchar(d$V1)) + mbfuckery		#fixme: rawchar & status should go into different slots.
   } else bouts=data.frame(full=format(file.info(path)$mtime,"%d%m%y%H%M%S"), bout_length=0, status=17, rawchar=0,stringsAsFactor = FALSE)
   return(bouts)
 }
@@ -302,7 +310,7 @@ readGrexp = function(d=NULL,path=NA, min.match=0.1){
 dropSingle= function(con, id=id)
 { if (missing(con)) {con = snbcon(credentials = get('cred',envir=.snb))
                      dc = TRUE
-}
+} else dc=FALSE
 year=dbq(con,paste("select year_ from file_status where id=",id,sep=""))
 dbq(con,paste("delete from RAW_",year," where id=",id,sep=""))
 dbq(con,paste("delete from RAW_",(year-1)," where id=",id,sep=""))

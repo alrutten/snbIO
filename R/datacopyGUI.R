@@ -48,6 +48,7 @@
     drv=findRemovable()
        
     if (!(file.exists(outfile))) { 
+    
       dir.create(dirname(outfile),showWarnings=FALSE,recursive=TRUE)
 # COPY FILE AND GET METADATA            
       if (length(drv)>0)  {   # SD card gets detected
