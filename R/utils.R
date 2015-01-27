@@ -32,7 +32,8 @@ writeload = function(d, fname = gsub('\\\\','/',tempfile()), con, db, tb, ignore
   return(foo)
 }
 
-is.clean = function(var) { #omit last row because that may be truncated although there's no other problems
+is.clean = function(var) { 
+  #omit last row because that may be truncated although there's no other problems
   posl=c(16,23,32)
   if (length(var)>1) all(all(unique(nchar(var[-length(var)]) %in% posl,na.rm=TRUE)),all(!is.na(as.numeric(substring(var,0,12))))) else
     all(all(nchar(var)%in% posl,na.rm=TRUE),all(!is.na(as.numeric(substring(var,0,12)))))

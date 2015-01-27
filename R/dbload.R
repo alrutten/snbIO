@@ -43,18 +43,17 @@ readRaw = function(snbdir = snbDir, path){
     if (!file.exists(fname)) return(FALSE)
   }
   
-  d = read.table(file=fname,colClasses="character",row.names=NULL,col.names="V1",comment.char="",blank.lines.skip=TRUE)
+  d = read.table(file=fname,colClasses="character",row.names=NULL,col.names="V1",comment.char="",blank.lines.skip=TRUE,stringsAsFactors=FALSE)
   #catch multibyte fuckery
-  mbfuckery = 0
-  mb = try(is.clean(d$V1)) #sadly, only the first row with multibyte characters is reported
-  while (class(mb)=="try-error") {
+
+  mb = try(is.clean(d$V1)) 
+  while (class(mb)=="try-error") { #sadly, only the first row with multibyte characters is reported in the error value
     mbmatch = matchGregexpr('[1234567890]+',mb[1])$match
     d = data.frame(V1 = d$V1[-c(as.numeric(mbmatch))],stringsAsFactors=FALSE) #one-variable dataframe gets converted to a vector when removing rows by index
-    mbfuckery = mbfuckery + 1 #to add to nchar later, so that this file shows up as 'junk in file'.
     mb = try(is.clean(d$V1))
   }
   if (nrow(d)>0){  
-    if (!mb) {
+    if (mb) {
       status=1
       bouts = data.frame(full=rle(d$V1)[[2]], bout_length = rle(d$V1)[[1]],stringsAsFactors=FALSE)	}	 else {
         
@@ -63,7 +62,7 @@ readRaw = function(snbdir = snbDir, path){
         
       }
     bouts$status=status
-    bouts$rawchar=sum(nchar(d$V1)) + mbfuckery		#fixme: rawchar & status should go into different slots.
+    bouts$rawchar=sum(nchar(d$V1))		#fixme: rawchar & status should go into different slots.
   } else bouts=data.frame(full=format(file.info(path)$mtime,"%d%m%y%H%M%S"), bout_length=0, status=17, rawchar=0,stringsAsFactor = FALSE)
   return(bouts)
 }
@@ -221,19 +220,21 @@ gc()
 }
 
 readGrexp = function(d=NULL,path=NA, min.match=0.1){
-  if (!exists('d')) d = read.table(file=path,colClasses="character",row.names=NULL,col.names="V1",comment.char="",blank.lines.skip=TRUE)
+  if (!exists('d')) d = read.table(file=path,colClasses="character",row.names=NULL,col.names="V1",comment.char="",blank.lines.skip=TRUE,stringsAsFactors=FALSE)
   
   yrbroken=FALSE
   d$match = grepl(paste("^",regexpString("anyDate"),sep=""),d$V1,perl=TRUE)			#does the record start with a valid date?
-  if (nrow(d)==sum(!d$match)){ 							# NOTHING MAKES SENSE 
+  if (nrow(d)==sum(!d$match)){ 							
+    # NOTHING MAKES SENSE WE ARE NOT EVEN GOING TO TRY TO EXTRACT DATA
     bouts=data.frame(full=format(file.info(path)$mtime-86400,"%d%m%y%H%M%S"),bout_length=-1) } else { 
       
       d$fault=ifelse((nchar(d$V1)>32|(nchar(d$V1)>23 & grepl("V",d$V1)==TRUE)),1,0) # isn't the record too long?
       if (any(is.na(as.numeric(substring(d$V1,0,12))))) yrbroken=TRUE  # are there letters where there should be none?
+      #make regular expression (if year is invalid, do not try to match numerical year)
       str = ifelse(!yrbroken,paste("(\\d\\d)(([01]\\d)|(2[0-4]))([0-5]\\d)([0-5]\\d)"),paste("(.{2})(([01]\\d)|(2[0-4]))([0-5]\\d)([0-5]\\d)"))
       
-      
-      d$nd=ifelse(d$match,substring(d$V1,1,4),ifelse(grepl(paste(regexpString("ddmm")),substring(d$V1,1,4),perl=TRUE),substring(d$V1,1,4),0))	#find valid daymonths to seed regexps with
+      #find valid daymonths to seed regexps with
+      d$nd=ifelse(d$match,substring(d$V1,1,4),ifelse(grepl(paste(regexpString("ddmm")),substring(d$V1,1,4),perl=TRUE),substring(d$V1,1,4),0))	
       nds = unique(d$nd[d$nd!=0])
       
       
@@ -301,7 +302,7 @@ readGrexp = function(d=NULL,path=NA, min.match=0.1){
           }
         }	
         rl=rle(bouts[which(nchar(bouts)>12)])	
-        bouts=data.frame(full=rl[2],bout_length=rl[1])[-1,]		} else bouts=data.frame(full=format(file.info(path)$mtime-86400,"%d%m%y%H%M%S"),bout_length=1)
+        bouts=data.frame(full=rl[2],bout_length=rl[1],stringsAsFactors=FALSE)[-1,]		} else bouts=data.frame(full=format(file.info(path)$mtime-86400,"%d%m%y%H%M%S"),bout_length=1,stringsAsFactors=FALSE)
     }
   return(bouts)
 }
