@@ -309,13 +309,13 @@ readGrexp = function(d=NULL,path=NA, min.match=0.1){
 
 
 dropSingle= function(con, id=id)
-{ if (missing(con)) {con = snbcon(credentials = get('cred',envir=.snb))
+{ if (missing(con)) {con = dbcon(database='SNBatWESTERHOLZ2',user='snb',password='cs')
                      dc = TRUE
 } else dc=FALSE
-year=dbq(con,paste("select year_ from file_status where id=",id,sep=""))
-dbq(con,paste("delete from RAW_",year," where id=",id,sep=""))
-dbq(con,paste("delete from RAW_",(year-1)," where id=",id,sep=""))
-dbq(con,paste("update file_status set upload_status=0 where id=", id, sep=""))
+year=dbq(con,paste("select year_ from file_status where id=",id))
+dbq(con,paste0("delete from RAW_",year," where id=",id))
+dbq(con,paste0("delete from BETA_Events",year," where id=",id))
+dbq(con,paste("update file_status set upload_status=0 where id=", id))
 if (dc) on.exit(closeCon(con))
 }  
 
@@ -330,11 +330,16 @@ extractVars <- function(d)  {
                  pirlb=substring(d[,1],13,16),
                  PIR=substring(d[,1],13,14),
                  LB=substring(d[,1],15,16),
+                 pk = c(1:nrow(d)),
                  stringsAsFactors = FALSE)
   
-  if(nrow(dfr)>1 & dfr$status[1]>1) {	
-    dfr$datetime_=ifelse(is.na(dfr$datetime_),as.POSIXct(strptime(paste(substring(dfr$full,1,4),"65",substring(dfr$full,7,12),sep=""),format="%d%m%y%H%M%S")),dfr$datetime_) #for if year is not numeric
-    dfr$datetime_=backtoPOSIXct(dfr$datetime_)
+  if(nrow(dfr)>1 & dfr$status[1]>1) {	 
+    #for if year is not numeric
+    nadt = subset(dfr, is.na(datetime_))
+    dfr = subset(dfr, !is.na(datetime_))
+    nadt$datetime_=as.POSIXct(strptime(paste(substring(nadt$full,1,4),"65",substring(nadt$full,7,12),sep=""),format="%d%m%y%H%M%S",tz='UTC'))
+    dfr = rbind(nadt,dfr)
+    dfr = dfr[order(dfr$pk),]
     tst = c("transp","bv","pirlb")
     for (k in 1:length(tst)) {
       td=regexpr(regexpString(tst[k]), dfr$rest) 
@@ -342,7 +347,7 @@ extractVars <- function(d)  {
       if ( k!=2) dfr$rest= paste(substring(dfr$rest,1,td-1),substring(dfr$rest,td+attr(td,"match.length"),nchar(dfr$rest)),sep="") else
         dfr$rest=ifelse(td>-1,paste(substring(dfr$rest,1,td-1)),dfr$rest)
     }
-    if 	(median(nchar(dfr$pirlb[dfr$pirlb!='']),na.rm=TRUE)<4) { 
+    if 	(median(nchar(dfr$pirlb[dfr$pirlb!='']),na.rm=TRUE)<4) { #old data where pir = 12 and lb = 34 
       tpir=regexpr("[12]+",dfr$pirlb)
       tlb=regexpr("[34]+",dfr$pirlb)
       dfr$PIR = ifelse(as.numeric(row.names(dfr))<=max(which(nchar(dfr$pirlb)<4),na.rm=TRUE),

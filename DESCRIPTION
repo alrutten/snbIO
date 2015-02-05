@@ -1,8 +1,8 @@
 Package: snbIO
 Type: Package
 Title: snb dataloading
-Version: 1.02
-Date: 2015-01-26
+Version:2015.04
+Date: 2015-02-05
 Author: Anne Rutten
 Maintainer: Anne Rutten <arutten@orn.mpg.de>
 Depends: sdb,tcltk, tcltk2,party, plyr, DBI
