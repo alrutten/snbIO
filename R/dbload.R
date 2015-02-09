@@ -333,7 +333,7 @@ extractVars <- function(d)  {
                  pk = c(1:nrow(d)),
                  stringsAsFactors = FALSE)
   
-  if(nrow(dfr)>1 & dfr$status[1]>1) {	 
+  if(nrow(dfr)>1 & dfr$status[1]>1 & any(is.na(dfr$datetime_))) {	 
     #for if year is not numeric
     nadt = subset(dfr, is.na(datetime_))
     dfr = subset(dfr, !is.na(datetime_))
