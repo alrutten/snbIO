@@ -352,6 +352,6 @@ birdIDs = function() {
   con = dbcon(database = 'SNBatWESTERHOLZ2',user='snb',password = 'cs')
   on.exit(closeCon(con))
   
-  return(dbq(con,snipFetch(con=con,ID=59)))
+  return(dbq(con,snipFetch(con=con,id=59)))
   
 }
